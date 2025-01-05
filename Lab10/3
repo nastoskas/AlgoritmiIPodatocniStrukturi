@@ -1,0 +1,63 @@
+import java.util.*;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        int n = scanner.nextInt();
+        scanner.nextLine();
+
+        Map<String, Integer> task = new HashMap<>();
+        for (int i = 0; i < n; i++) {
+            String[] string = scanner.nextLine().split(" ");
+            task.put(string[0], Integer.parseInt(string[1]));
+        }
+
+        int m = scanner.nextInt();
+        scanner.nextLine();
+
+        Map<String, List<String>> graph = new HashMap<>();
+        Map<String, Integer> inDegree = new HashMap<>();
+        for (String tasks : task.keySet()) {
+            graph.put(tasks, new ArrayList<>());
+            inDegree.put(tasks, 0);
+        }
+
+        for (int i = 0; i < m; i++) {
+            String[] dependency = scanner.nextLine().split(" ");
+            String succ = dependency[0];
+            String pred = dependency[1];
+
+            graph.get(pred).add(succ);
+            inDegree.put(succ, inDegree.get(succ) + 1);
+        }
+        System.out.println(findMinTime(task, graph, inDegree));
+    }
+
+    public static int findMinTime(Map<String, Integer> taskTimes,
+                                  Map<String, List<String>> graph, Map<String, Integer> inDegree) {
+        Queue<String> queue = new LinkedList<>();
+        Map<String, Integer> dp = new HashMap<>();
+        for (String task : inDegree.keySet()) {
+            if (inDegree.get(task) == 0) {
+                queue.offer(task);
+                dp.put(task, taskTimes.get(task));
+            }
+        }
+        while (!queue.isEmpty()) {
+            String current = queue.poll();
+            for (String neighbor : graph.get(current)) {
+                dp.put(neighbor, Math.max(dp.getOrDefault(neighbor, 0), dp.get(current) + taskTimes.get(neighbor)));
+                inDegree.put(neighbor, inDegree.get(neighbor) - 1);
+                if (inDegree.get(neighbor) == 0) {
+                    queue.offer(neighbor);
+                }
+            }
+        }
+        int maxTime = 0;
+        for (int time : dp.values()) {
+            maxTime = Math.max(maxTime, time);
+        }
+
+        return maxTime;
+    }
+} 
